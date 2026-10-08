@@ -1,5 +1,8 @@
 """Tic-Tac-Toe. Run: python Tictactoe.py"""
 
+TURTLE = "🐢"
+RABBIT = "🐇"
+
 WIN_LINES = (
     (0, 1, 2),
     (3, 4, 5),
@@ -10,6 +13,10 @@ WIN_LINES = (
     (0, 4, 8),
     (2, 4, 6),
 )
+
+
+def other_mark(mark):
+    return RABBIT if mark == TURTLE else TURTLE
 
 
 def winner(board):
@@ -25,10 +32,13 @@ def board_full(board):
 
 def print_board(board):
     def show(index):
-        return board[index] if board[index] else str(index + 1)
+        return board[index] if board[index] else str(index + 1) + " "
 
-    rows = [" | ".join(show(row * 3 + col) for col in range(3)) for row in range(3)]
-    print("\n" + "\n--+---+--\n".join(rows) + "\n")
+    rows = [
+        " | ".join(show(row * 3 + col) for col in range(3))
+        for row in range(3)
+    ]
+    print("\n" + "\n---+----+---\n".join(rows) + "\n")
 
 
 def empty_cells(board):
@@ -44,7 +54,7 @@ def minimax(board, mark, maximizing):
     if board_full(board):
         return 0, None
 
-    opponent = "@" if mark == "#" else "#"
+    opponent = other_mark(mark)
     current = mark if maximizing else opponent
     best_score = -2 if maximizing else 2
     best_move = None
@@ -53,6 +63,7 @@ def minimax(board, mark, maximizing):
         board[index] = current
         score, _ = minimax(board, mark, not maximizing)
         board[index] = ""
+
         if maximizing and score > best_score:
             best_score, best_move = score, index
         elif not maximizing and score < best_score:
@@ -70,30 +81,45 @@ def computer_move(board, mark):
 def human_move(board, mark):
     while True:
         raw = input(f"{mark}'s turn. Pick a square (1-9): ").strip()
-        if not raw.isdigit() or not 1 <= int(raw) <= 9:
+        if raw not in {str(number) for number in range(1, 10)}:
             print("Enter a number from 1 to 9.")
             continue
+
         index = int(raw) - 1
         if board[index]:
             print("That square is taken. Try again.")
             continue
+
         board[index] = mark
         return
 
 
 def play(vs_computer):
     board = [""] * 9
-    human_mark = "#"
-    computer_mark = "@"
+    human_mark = TURTLE
+    computer_mark = RABBIT
 
     if vs_computer:
-        choice = input("Play as # (goes first) or @? [#/@]: ").strip()
-        if choice == "@":
-            human_mark, computer_mark = "@", "#"
+        while True:
+            choice = input(
+                f"1 — turtle {TURTLE} (goes first), "
+                f"2 — rabbit {RABBIT}: "
+            ).strip()
 
-    turn = "#"
+            if choice in {"1", "2"}:
+                break
+            print("Choose 1 or 2.")
+
+        if choice == "2":
+            human_mark, computer_mark = RABBIT, TURTLE
+
+        print(f"You: {human_mark} | Computer: {computer_mark}")
+
+    turn = TURTLE
+
     while True:
         print_board(board)
+
         if vs_computer and turn == computer_mark:
             computer_move(board, computer_mark)
         else:
@@ -104,21 +130,26 @@ def play(vs_computer):
             print_board(board)
             print(f"{found} wins!")
             return
+
         if board_full(board):
             print_board(board)
             print("Draw.")
             return
-        turn = "@" if turn == "#" else "#"
+
+        turn = other_mark(turn)
 
 
 def main():
-    print("Tic-Tac-Toe")
+    print(f"Tic-Tac-Toe: {TURTLE} vs {RABBIT}")
+
     while True:
         mode = input("1 — two players, 2 — vs computer: ").strip()
         if mode not in {"1", "2"}:
             print("Choose 1 or 2.")
             continue
+
         play(vs_computer=mode == "2")
+
         again = input("Play again? [y/n]: ").strip().lower()
         if again != "y":
             print("Goodbye.")
